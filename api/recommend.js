@@ -1,8 +1,19 @@
 export default async function handler(req, res) {
+  // Allow requests from GitHub Pages and any origin
+  const allowedOrigins = [
+    'https://buonsenso-pais.github.io',
+    'http://localhost',
+    'http://127.0.0.1',
+  ];
+  const origin = req.headers.origin || '*';
+  const allowed = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
 
+  // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -15,7 +26,11 @@ export default async function handler(req, res) {
     const { messages, system, max_tokens } = req.body;
 
     if (!messages || !system) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: 'Missing required fields: messages and system' });
+    }
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'API key not configured on server' });
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -36,7 +51,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: data.error || 'API error' });
+      return res.status(response.status).json({ error: data.error || 'Anthropic API error' });
     }
 
     return res.status(200).json(data);
