@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     if (!messages || !system) return res.status(400).json({ error: 'Missing fields' });
     if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'API key not configured' });
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 55000);
+    const timeout = setTimeout(() => controller.abort(), 9000);
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5',
         max_tokens: max_tokens || 4096,
         system,
         messages,
